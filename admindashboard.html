@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <section id="sidebar">
+        <a href="admin-dashboard.html" class="brand">
+            <i class="bx bx-shield"></i>
+            <span class="text">Registrar Queue<br>Admin Panel</span>
+        </a>
+
+        <nav class="side-menu top">
+            <a href="#dashboard" class="active" id="dashboard-link">
+                <i class="bx bx-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="#history" id="history-link">
+                <i class="bx bx-list-ul"></i>
+                <span>Queue History</span>
+            </a>
+        </nav>
+
+        <a href="login.html" class="logout">
+            <i class="bx bx-log-out"></i>
+            <span>Logout</span>
+        </a>
+    </section>
+
+    <main id="content">
+        <header class="dashboard-header">
+            <div>
+                <h1 id="page-title">Dashboard</h1>
+                <p id="page-subtitle">Receive and manage student service tickets</p>
+            </div>
+            <span id="clock"></span>
+        </header>
+
+        <section id="dashboard-view">
+            <div class="stats">
+                <article class="stat">
+                    <span>Now Serving</span>
+                    <strong id="current-number">—</strong>
+                    <small id="current-info">No ticket being served</small>
+                </article>
+
+                <article class="stat">
+                    <span>Waiting</span>
+                    <strong id="waiting-count">0</strong>
+                    <small id="estimated-wait">Estimated wait: —</small>
+                </article>
+
+                <article class="stat">
+                    <span>Completed Today</span>
+                    <strong id="completed-count">0</strong>
+                    <small id="skipped-count">0 skipped today</small>
+                </article>
+            </div>
+
+            <div class="toolbar admin-toolbar">
+                <button id="next-btn" class="primary" type="button">Next Ticket</button>
+                <button id="call-btn" type="button">Call Student</button>
+                <button id="skip-btn" type="button">Skip Ticket</button>
+                <button id="done-btn" type="button">Mark Done</button>
+            </div>
+
+            <p class="admin-note">
+                Select <strong>Next Ticket</strong> to call the first student in line.
+                After you mark a ticket Done or Skip, the next waiting ticket will be loaded automatically.
+            </p>
+
+            <section class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Waiting List</h2>
+                        <p>Tickets waiting to be served</p>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Queue #</th>
+                                <th>Service</th>
+                                <th>Issued</th>
+                                <th>Waiting Time</th>
+                                <th>Estimated Call</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waiting-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+
+        <section id="history-view" hidden>
+            <div class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Queue History</h2>
+                        <p>Previously served, completed, and skipped tickets</p>
+                    </div>
+                    <button id="clear-btn" class="danger-outline" type="button">
+                        Clear History
+                    </button>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Queue #</th>
+                                <th>Service</th>
+                                <th>Issued</th>
+                                <th>Status</th>
+                                <th>Called</th>
+                                <th>Finished</th>
+                                <th>Wait Before Call</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="./admin.js"></script>
+</body>
+</html>

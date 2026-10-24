@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Admin Login</title>
+    <link rel="stylesheet" href="login-style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <main class="login-layout">
+        <section class="login-brand-panel">
+            <a class="brand" href="studentdashboard.html">
+                <span class="brand-icon"><i class="bx bx-buildings"></i></span>
+                <span><strong>Registrar Queue</strong><small>Queue Management System</small></span>
+            </a>
+            <div class="brand-message">
+                <span class="eyebrow">REGISTRAR SERVICES</span>
+                <h1>Keep every student moving.</h1>
+                <p>Manage student tickets, call the next student, and keep the registrar queue organized.</p>
+                <div class="feature-list">
+                    <div><i class="bx bx-check-circle"></i><span>Manage incoming tickets</span></div>
+                    <div><i class="bx bx-check-circle"></i><span>Update queue status</span></div>
+                    <div><i class="bx bx-check-circle"></i><span>Review queue history</span></div>
+                </div>
+            </div>
+            <div class="brand-footer">Registrar Queue System</div>
+        </section>
+
+        <section class="login-main">
+            <a class="back-link" href="studentdashboard.html"><i class="bx bx-arrow-back"></i> Back to student portal</a>
+            <div class="login-card">
+                <div class="login-icon"><i class="bx bx-lock-alt"></i></div>
+                <p class="eyebrow">ADMIN ACCESS</p>
+                <h2>Welcome back</h2>
+                <p class="login-subtitle">Sign in with your administrator account to manage the queue.</p>
+
+                <form id="login-form">
+                    <label for="email">Admin email</label>
+                    <div class="input-wrap">
+                        <i class="bx bx-envelope"></i>
+                        <input id="email" name="email" type="email" placeholder="admin@school.edu" autocomplete="username" required>
+                    </div>
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <i class="bx bx-lock-alt"></i>
+                        <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+                        <button class="toggle-password" type="button" id="toggle-password" aria-label="Show password"><i class="bx bx-show"></i></button>
+                    </div>
+                    <button type="submit" class="login-button"><span>Sign In</span><i class="bx bx-right-arrow-alt"></i></button>
+                    <p id="login-message" class="login-message" role="status" hidden></p>
+                </form>
+                <p class="security-note"><i class="bx bx-shield-quarter"></i> Authorized registrar staff only.</p>
+            </div>
+            <p class="login-bottom">Need access? Contact your system administrator.</p>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("login-form");
+        const message = document.getElementById("login-message");
+        const password = document.getElementById("password");
+        const toggle = document.getElementById("toggle-password");
+
+        toggle.addEventListener("click", () => {
+            const showing = password.type === "text";
+            password.type = showing ? "password" : "text";
+            toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+            toggle.innerHTML = showing ? '<i class="bx bx-show"></i>' : '<i class="bx bx-hide"></i>';
+        });
+
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            message.hidden = false;
+            message.className = "login-message info";
+            message.textContent = "Logging in...";
+        });
+    </script>
+    <script type="module" src="./login.js"></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registrar Queue</title>
+    <link rel="stylesheet" href="student-style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="#">
+            <span class="brand-icon"><i class="bx bx-buildings"></i></span>
+            <span>
+                <strong>Registrar Queue</strong>
+                <small>Student Portal</small>
+            </span>
+        </a>
+        <a class="admin-login" href="login.html">
+            <i class="bx bx-lock-alt"></i> Admin Login
+        </a>
+    </header>
+
+    <main class="page">
+        <section class="welcome">
+            <div>
+                <p class="eyebrow">STUDENT SERVICES</p>
+                <h1>Your registrar visit, made easier.</h1>
+                <p class="welcome-text">Choose the service you need, get your ticket, and follow the live queue below.</p>
+            </div>
+            <div class="welcome-mark">
+                <i class="bx bx-calendar-check"></i>
+            </div>
+        </section>
+
+        <section class="dashboard-grid">
+            <section class="panel ticket-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">GET STARTED</p>
+                        <h2>Select a Ticket</h2>
+                        <p>Choose the registrar service you want to visit.</p>
+                    </div>
+                    <span class="heading-icon">
+                        <i class="bx bx-receipt"></i>
+                    </span>
+                </div>
+
+                <form id="ticket-form">
+                    <label for="service-select">What do you need help with?</label>
+                    <select id="service-select" required>
+                        <option value="" selected disabled>Choose a service</option>
+                        <option value="Permit">Permit</option>
+                        <option value="Documents / requirements">Documents / requirements</option>
+                        <option value="Payment">Payment</option>
+                        <option value="Enrollment">Enrollment</option>
+                        <option value="Grades / records">Grades / records</option>
+                        <option value="General inquiry">General inquiry</option>
+                    </select>
+
+                    <button type="submit" class="primary-button">
+                        <i class="bx bx-plus-circle"></i> Get My Ticket
+                    </button>
+
+                    <p class="form-hint">
+                        <i class="bx bx-info-circle"></i>
+                        Please submit only one ticket for the service you need.
+                    </p>
+                </form>
+
+                <div id="ticket-result" class="ticket-result" hidden aria-live="polite">
+                    <div class="result-icon">
+                        <i class="bx bx-check"></i>
+                    </div>
+                    <div>
+                        <p class="result-label">YOUR TICKET NUMBER</p>
+                        <strong id="my-ticket-number">—</strong>
+                        <p id="my-ticket-service">Ticket submitted</p>
+                        <span id="my-ticket-status" class="status-pill waiting">Waiting</span>
+                    </div>
+                </div>
+
+                <div id="ticket-message" class="message" role="status" hidden></div>
+            </section>
+
+            <section class="panel now-serving-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">LIVE QUEUE</p>
+                        <h2>Now Serving</h2>
+                        <p>Keep an eye on the number currently being served.</p>
+                    </div>
+                    <span class="live-indicator">
+                        <span></span> Live
+                    </span>
+                </div>
+
+                <div class="serving-display">
+                    <span class="serving-caption">CURRENT STUDENT NUMBER</span>
+                    <strong id="current-number">—</strong>
+                    <p id="current-service">Waiting for the next ticket</p>
+                </div>
+
+                <div class="queue-summary">
+                    <div>
+                        <span class="summary-icon blue">
+                            <i class="bx bx-time-five"></i>
+                        </span>
+                        <div>
+                            <small>Students Waiting</small>
+                            <strong id="waiting-count">0</strong>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="summary-icon green">
+                            <i class="bx bx-check-circle"></i>
+                        </span>
+                        <div>
+                            <small>Completed Today</small>
+                            <strong id="completed-count">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section class="lower-grid">
+            <section class="panel queue-panel">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">QUEUE STATUS</p>
+                        <h2>Waiting List</h2>
+                        <p>Tickets currently waiting in the queue.</p>
+                    </div>
+                    <span class="queue-count" id="queue-count">0 waiting</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket No.</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waiting-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <aside class="panel tips-panel">
+                <span class="tips-icon">
+                    <i class="bx bx-bulb"></i>
+                </span>
+                <h2>Before you go</h2>
+                <ul>
+                    <li>
+                        <i class="bx bx-check-circle"></i>
+                        <span>Prepare the documents required for your selected service.</span>
+                    </li>
+                    <li>
+                        <i class="bx bx-check-circle"></i>
+                        <span>Stay near the registrar while your ticket is waiting.</span>
+                    </li>
+                    <li>
+                        <i class="bx bx-check-circle"></i>
+                        <span>Listen for your ticket number when it is called.</span>
+                    </li>
+                </ul>
+                <div class="help-note">
+                    <i class="bx bx-help-circle"></i>
+                    <span>Need a different service? Ask the registrar staff before submitting another ticket.</span>
+                </div>
+            </aside>
+        </section>
+
+        <footer>
+            <span>Registrar Queue System</span>
+            <span id="updated-time">Queue last updated —</span>
+        </footer>
+    </main>
+
+    <script type="module" src="./student.js"></script>
+</body>
+</html>
