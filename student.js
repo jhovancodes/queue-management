@@ -10,7 +10,10 @@ import {
   onSnapshot,
   query,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  runTransaction,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const serviceSelect = document.getElementById("service-select");
@@ -110,7 +113,21 @@ ticketForm.addEventListener("submit", async event => {
   button.disabled = true;
 
   try {
-    const number = `A${Date.now().toString().slice(-7)}${Math.floor(Math.random() * 10)}`;
+    const now = new Date();
+    const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const counterRef = doc(db, "queueCounters", dateKey);
+
+    const number = await runTransaction(db, async transaction => {
+      const counterSnapshot = await transaction.get(counterRef);
+      const nextNumber = (counterSnapshot.exists() ? counterSnapshot.data().lastNumber : 0) + 1;
+
+      transaction.set(counterRef, {
+        lastNumber: nextNumber,
+        updatedAt: serverTimestamp()
+      });
+
+      return `A${String(nextNumber).padStart(3, "0")}`;
+    });
 
     const ticketRef = await addDoc(ticketsRef, {
       number,
@@ -128,8 +145,8 @@ ticketForm.addEventListener("submit", async event => {
     showMessage(`Your ticket ${number} has been submitted.`, "success");
     serviceSelect.value = "";
   } catch (error) {
-    console.error(error);
-    showMessage("Ticket submission failed. Check your internet connection and Firestore rules.", "error");
+    console.error("Ticket submission error:", error);
+    showMessage("Ticket submission failed. Check your Firestore rules and counter permissions.", "error");
   } finally {
     button.disabled = false;
   }
@@ -157,13 +174,13 @@ onAuthStateChanged(auth, async user => {
           render();
         },
         error => {
-          console.error(error);
+          console.error("Queue listener error:", error);
           showMessage("Unable to load the queue. Check your Firestore rules.", "error");
         }
       );
     }
   } catch (error) {
-    console.error(error);
+    console.error("Firebase sign-in error:", error);
     showMessage("Firebase sign-in failed. Check Authentication settings.", "error");
   }
 });
