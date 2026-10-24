@@ -14,11 +14,12 @@ form?.addEventListener("submit", async event => {
   if (button) button.disabled = true;
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    window.location.href = "admindashboard.html";
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    console.log("Login successful:", result.user.uid);
+    window.location.href = "./admindashboard.html";
   } catch (error) {
-    console.error(error);
-    alert("Login failed. Check your email and password, and make sure the account exists in Firebase Authentication.");
+    console.error("Login error:", error);
+    alert(`Login failed: ${error.message}`);
   } finally {
     if (button) button.disabled = false;
   }

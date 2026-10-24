@@ -18,8 +18,9 @@ import {
 
 const ticketsRef = collection(db, "tickets");
 let tickets = [];
-let audioContext;
 let unsubscribeTickets = null;
+let authCheckStarted = false;
+let timer = null;
 
 const byId = id => document.getElementById(id);
 
@@ -94,6 +95,7 @@ async function startNextTicket() {
   if (currentTicket()) return;
 
   const next = waitingTickets()[0];
+
   if (!next) {
     alert("There are no waiting tickets.");
     return;
@@ -104,6 +106,8 @@ async function startNextTicket() {
 
 function showWaitingList(waiting, current, average, now) {
   const body = byId("waiting-body");
+  if (!body) return;
+
   body.replaceChildren();
 
   if (current) {
@@ -130,6 +134,7 @@ function showWaitingList(waiting, current, average, now) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "Skip";
+
     button.addEventListener("click", async () => {
       try {
         await changeStatus(ticket, "skipped");
@@ -153,6 +158,8 @@ function showWaitingList(waiting, current, average, now) {
 
 function showHistory() {
   const body = byId("history-body");
+  if (!body) return;
+
   body.replaceChildren();
 
   const history = [...tickets]
@@ -190,16 +197,22 @@ function showData() {
   const current = currentTicket();
   const waiting = waitingTickets();
 
-  byId("clock").textContent = new Date().toLocaleString([], {
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
+  const clock = byId("clock");
+  if (clock) {
+    clock.textContent = new Date().toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short"
+    });
+  }
 
-  byId("current-number").textContent = current?.number || "—";
+  const currentNumber = byId("current-number");
+  if (currentNumber) currentNumber.textContent = current?.number || "—";
 
   let currentInfo = "No ticket being served";
+
   if (current) {
     currentInfo = `${current.service} | Serving for ${formatDuration(now - timeValue(current.calledAt))}`;
+
     if (current.lastCalledAt) {
       const remaining = Math.max(0, 300000 - (now - timeValue(current.lastCalledAt)));
       currentInfo += ` | Auto-skip in ${formatDuration(remaining)}`;
@@ -208,14 +221,20 @@ function showData() {
     }
   }
 
-  byId("current-info").textContent = currentInfo;
-  byId("waiting-count").textContent = waiting.length;
+  const info = byId("current-info");
+  if (info) info.textContent = currentInfo;
+
+  const waitingCount = byId("waiting-count");
+  if (waitingCount) waitingCount.textContent = waiting.length;
 
   const completed = tickets.filter(ticket => ticket.status === "done" && isToday(ticket.finishedAt));
   const skipped = tickets.filter(ticket => ticket.status === "skipped" && isToday(ticket.finishedAt));
 
-  byId("completed-count").textContent = completed.length;
-  byId("skipped-count").textContent = `${skipped.length} skipped today`;
+  const completedCount = byId("completed-count");
+  if (completedCount) completedCount.textContent = completed.length;
+
+  const skippedCount = byId("skipped-count");
+  if (skippedCount) skippedCount.textContent = `${skipped.length} skipped today`;
 
   const serviceTimes = completed
     .filter(ticket => ticket.calledAt && ticket.finishedAt)
@@ -225,14 +244,22 @@ function showData() {
     ? Math.max(1, Math.round(serviceTimes.reduce((sum, value) => sum + value, 0) / serviceTimes.length))
     : 0;
 
-  byId("estimated-wait").textContent = average
-    ? `Estimated wait: about ${current ? average : 0} min`
-    : "Estimated wait: —";
+  const estimatedWait = byId("estimated-wait");
+  if (estimatedWait) {
+    estimatedWait.textContent = average
+      ? `Estimated wait: about ${current ? average : 0} min`
+      : "Estimated wait: —";
+  }
 
-  byId("next-btn").disabled = Boolean(current) || waiting.length === 0;
-  byId("call-btn").disabled = !current;
-  byId("done-btn").disabled = !current;
-  byId("skip-btn").disabled = !current;
+  const nextButton = byId("next-btn");
+  const callButton = byId("call-btn");
+  const doneButton = byId("done-btn");
+  const skipButton = byId("skip-btn");
+
+  if (nextButton) nextButton.disabled = Boolean(current) || waiting.length === 0;
+  if (callButton) callButton.disabled = !current;
+  if (doneButton) doneButton.disabled = !current;
+  if (skipButton) skipButton.disabled = !current;
 
   showWaitingList(waiting, current, average, now);
   showHistory();
@@ -244,7 +271,7 @@ function playCallSound() {
   sound.play().catch(error => console.error("Audio failed:", error));
 }
 
-byId("next-btn").addEventListener("click", async () => {
+byId("next-btn")?.addEventListener("click", async () => {
   try {
     await startNextTicket();
   } catch (error) {
@@ -253,7 +280,7 @@ byId("next-btn").addEventListener("click", async () => {
   }
 });
 
-byId("call-btn").addEventListener("click", async () => {
+byId("call-btn")?.addEventListener("click", async () => {
   const current = currentTicket();
   if (!current) return;
 
@@ -265,17 +292,19 @@ byId("call-btn").addEventListener("click", async () => {
 
     playCallSound();
 
-    const card = byId("current-number").closest(".stat");
-    card.classList.remove("call-flash");
-    void card.offsetWidth;
-    card.classList.add("call-flash");
+    const card = byId("current-number")?.closest(".stat");
+    if (card) {
+      card.classList.remove("call-flash");
+      void card.offsetWidth;
+      card.classList.add("call-flash");
+    }
   } catch (error) {
     console.error(error);
     alert("Could not call the student. Check Firestore rules.");
   }
 });
 
-byId("done-btn").addEventListener("click", async () => {
+byId("done-btn")?.addEventListener("click", async () => {
   const current = currentTicket();
   if (!current) return;
 
@@ -288,7 +317,7 @@ byId("done-btn").addEventListener("click", async () => {
   }
 });
 
-byId("skip-btn").addEventListener("click", async () => {
+byId("skip-btn")?.addEventListener("click", async () => {
   const current = currentTicket();
   if (!current) return;
 
@@ -301,7 +330,7 @@ byId("skip-btn").addEventListener("click", async () => {
   }
 });
 
-byId("clear-btn").addEventListener("click", async () => {
+byId("clear-btn")?.addEventListener("click", async () => {
   if (!confirm("Delete completed and skipped tickets from queue history?")) return;
 
   const history = tickets.filter(ticket => ["done", "skipped"].includes(ticket.status));
@@ -315,66 +344,91 @@ byId("clear-btn").addEventListener("click", async () => {
 });
 
 function showPage() {
+  const dashboardView = byId("dashboard-view");
+  const historyView = byId("history-view");
+  const pageTitle = byId("page-title");
+  const pageSubtitle = byId("page-subtitle");
+  const dashboardLink = byId("dashboard-link");
+  const historyLink = byId("history-link");
+
+  if (!dashboardView || !historyView) return;
+
   const history = location.hash === "#history";
-  byId("dashboard-view").hidden = history;
-  byId("history-view").hidden = !history;
-  byId("page-title").textContent = history ? "Queue History" : "Dashboard";
-  byId("page-subtitle").textContent = history ? "Review your queue activity" : "Manage and monitor the queue";
-  byId("dashboard-link").classList.toggle("active", !history);
-  byId("history-link").classList.toggle("active", history);
+  dashboardView.hidden = history;
+  historyView.hidden = !history;
+
+  if (pageTitle) pageTitle.textContent = history ? "Queue History" : "Dashboard";
+  if (pageSubtitle) pageSubtitle.textContent = history ? "Review your queue activity" : "Manage and monitor the queue";
+  if (dashboardLink) dashboardLink.classList.toggle("active", !history);
+  if (historyLink) historyLink.classList.toggle("active", history);
 }
 
-byId("dashboard-link").addEventListener("click", () => {
+byId("dashboard-link")?.addEventListener("click", () => {
   location.hash = "dashboard";
 });
 
-byId("history-link").addEventListener("click", () => {
+byId("history-link")?.addEventListener("click", () => {
   location.hash = "history";
 });
 
 document.querySelector(".logout")?.addEventListener("click", async event => {
   event.preventDefault();
-  await signOut(auth);
-  location.href = "login.html";
+
+  try {
+    await signOut(auth);
+    location.href = "./login.html";
+  } catch (error) {
+    console.error("Logout error:", error);
+    alert("Could not log out. Please try again.");
+  }
 });
 
-let timer;
+window.addEventListener("hashchange", showPage);
 
 onAuthStateChanged(auth, async user => {
+  if (authCheckStarted) return;
+  authCheckStarted = true;
+
+  console.log("Firebase auth state:", user ? user.uid : "No user");
+
   if (!user || user.isAnonymous) {
-    location.href = "login.html";
+    console.error("Admin access denied: no authenticated email/password user.");
+    alert("You are not signed in as an admin. Please log in again.");
+    location.replace("./login.html");
     return;
   }
 
   try {
-    const profile = await getDoc(doc(db, "users", user.uid));
+    const profileRef = doc(db, "users", user.uid);
+    const profile = await getDoc(profileRef);
+
+    console.log("Admin profile exists:", profile.exists());
+    console.log("Admin profile data:", profile.exists() ? profile.data() : null);
 
     if (!profile.exists() || profile.data().role !== "admin") {
+      console.error("Admin access denied: missing profile or role is not admin.");
+      alert("Your account does not have the admin role. Check the users document ID and role field.");
       await signOut(auth);
-      location.href = "login.html";
+      location.replace("./login.html");
       return;
     }
 
-    if (!unsubscribeTickets) {
-      unsubscribeTickets = onSnapshot(
-        query(ticketsRef, orderBy("createdAt", "asc")),
-        snapshot => {
-          tickets = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
-          showData();
-        },
-        error => {
-          console.error(error);
-          alert("Could not load tickets. Check Firestore rules.");
-        }
-      );
-    }
+    unsubscribeTickets = onSnapshot(
+      query(ticketsRef, orderBy("createdAt", "asc")),
+      snapshot => {
+        tickets = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+        showData();
+      },
+      error => {
+        console.error("Ticket listener error:", error);
+        alert("Could not load tickets. Check Firestore rules.");
+      }
+    );
 
     showPage();
-    window.addEventListener("hashchange", showPage);
-    clearInterval(timer);
     timer = setInterval(showData, 1000);
   } catch (error) {
-    console.error(error);
-    alert("Could not verify admin access.");
+    console.error("Admin verification error:", error);
+    alert(`Could not verify admin access: ${error.message}`);
   }
 });
