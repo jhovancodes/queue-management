@@ -24,6 +24,7 @@ let currentUid = null;
 let lastTicketId = null;
 let tickets = [];
 let unsubscribeTickets = null;
+let latestTicketForPrint = null;
 
 const ticketsRef = collection(db, "tickets");
 
@@ -38,6 +39,73 @@ function timestampValue(value) {
   if (typeof value.toMillis === "function") return value.toMillis();
   if (typeof value === "number") return value;
   return new Date(value).getTime() || 0;
+}
+
+function buildTicketMarkup(ticket) {
+  const issued = ticket.createdAt?.toDate
+    ? ticket.createdAt.toDate().toLocaleString()
+    : new Date().toLocaleString();
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queue Ticket ${ticket.number}</title>
+<style>
+@page { size: 80mm auto; margin: 4mm; }
+* { box-sizing: border-box; }
+body { width: 72mm; margin: 0 auto; padding: 4mm 0; color: #111; font-family: Arial, sans-serif; text-align: center; }
+.brand { font-size: 15px; font-weight: 800; letter-spacing: .5px; }
+.sub { margin-top: 3px; font-size: 10px; }
+.rule { margin: 10px 0; border-top: 1px dashed #333; }
+.label { font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.number { margin: 7px 0; font-size: 38px; font-weight: 800; line-height: 1.1; }
+.service { font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+.details { margin-top: 9px; font-size: 10px; line-height: 1.6; }
+.footer { margin-top: 12px; font-size: 10px; font-weight: 700; }
+@media screen { body { margin: 18px auto; padding: 16px; border: 1px solid #ddd; } }
+</style>
+</head>
+<body>
+  <div class="brand">REGISTRAR OFFICE</div>
+  <div class="sub">QUEUE MANAGEMENT SYSTEM</div>
+  <div class="rule"></div>
+  <div class="label">YOUR QUEUE NUMBER</div>
+  <div class="number">${escapeTicketText(ticket.number)}</div>
+  <div class="service">${escapeTicketText(ticket.service)}</div>
+  <div class="rule"></div>
+  <div class="details">Issued: ${escapeTicketText(issued)}<br>Status: WAITING</div>
+  <div class="footer">Please wait for your number to be called.</div>
+  <div class="rule"></div>
+  <div class="sub">Thank you.</div>
+  <script>window.onload = () => { window.focus(); window.print(); };</script>
+</body>
+</html>`;
+}
+
+function escapeTicketText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function printTicket(ticket, printWindow = null) {
+  const target = printWindow || window.open("", "_blank", "width=420,height=650");
+
+  if (!target) {
+    showMessage("Your ticket was created, but the print window was blocked. Allow pop-ups and use the Print Ticket button.", "error");
+    return false;
+  }
+
+  target.document.open();
+  target.document.write(buildTicketMarkup(ticket));
+  target.document.close();
+  return true;
 }
 
 function render() {
@@ -94,6 +162,19 @@ function render() {
     const status = document.getElementById("my-ticket-status");
     status.textContent = myTicket.status.charAt(0).toUpperCase() + myTicket.status.slice(1);
     status.className = `status-pill ${myTicket.status}`;
+
+    let printButton = document.getElementById("print-ticket-btn");
+    if (!printButton) {
+      printButton = document.createElement("button");
+      printButton.id = "print-ticket-btn";
+      printButton.type = "button";
+      printButton.textContent = "Print Ticket";
+      printButton.className = "primary-button";
+      printButton.style.marginTop = "10px";
+      result.appendChild(printButton);
+    }
+
+    printButton.onclick = () => printTicket(myTicket);
   }
 }
 
@@ -110,6 +191,7 @@ ticketForm.addEventListener("submit", async event => {
 
   const button = ticketForm.querySelector('button[type="submit"]');
   button.disabled = true;
+  const printWindow = window.open("", "_blank", "width=420,height=650");
 
   try {
     const now = new Date();
@@ -141,9 +223,18 @@ ticketForm.addEventListener("submit", async event => {
     });
 
     lastTicketId = ticketRef.id;
+    latestTicketForPrint = {
+      id: ticketRef.id,
+      number,
+      service,
+      status: "waiting",
+      createdAt: new Date()
+    };
     showMessage(`Your ticket ${number} has been submitted.`, "success");
     serviceSelect.value = "";
+    printTicket(latestTicketForPrint, printWindow);
   } catch (error) {
+    if (printWindow && !printWindow.closed) printWindow.close();
     console.error("Ticket submission error:", error);
     showMessage("Ticket submission failed. Check your Firestore rules and counter permissions.", "error");
   } finally {

@@ -263,15 +263,6 @@ async function completeCurrentTicket() {
   try {
     await changeStatus(current, "done");
 
-    const completedSnapshot = await getDoc(doc(db, "tickets", current.id));
-    const completedTicket = {
-      id: completedSnapshot.id,
-      ...completedSnapshot.data()
-    };
-
-    fillReceipt(completedTicket, auth.currentUser?.email);
-    window.print();
-
     const freshTickets = await getDocs(query(ticketsRef, orderBy("createdAt", "asc")));
     const currentServing = freshTickets.docs.find(item => item.data().status === "serving");
 
