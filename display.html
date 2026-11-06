@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101d35">
+  <title>Registrar Queue Display</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="display.css">
+</head>
+<body>
+  <main class="display-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">R</div>
+        <div>
+          <p class="eyebrow">REGISTRAR OFFICE</p>
+          <h1>Queue Management System</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-pill"><span></span><strong id="connection-status">Connecting</strong></div>
+        <div class="clock-block"><strong id="clock">--:--</strong><span id="date">Loading date</span></div>
+        <button id="fullscreen-btn" type="button" aria-label="Toggle fullscreen">⛶</button>
+      </div>
+    </header>
+
+    <section class="main-grid">
+      <section class="now-card">
+        <div class="section-label"><span class="label-dot"></span> NOW SERVING</div>
+        <div class="current-number" id="current-number">—</div>
+        <div class="current-service" id="current-service">Please wait for the next ticket</div>
+        <div class="serving-footer"><span class="pulse-dot"></span><span id="serving-status">Waiting for the next student</span></div>
+      </section>
+
+      <aside class="side-column">
+        <section class="next-card">
+          <div class="section-heading"><div><p class="eyebrow">UP NEXT</p><h2>Next in Line</h2></div><span class="queue-count" id="waiting-count">0 waiting</span></div>
+          <div id="next-list" class="next-list"><div class="empty-state">No students waiting</div></div>
+        </section>
+        <section class="stats-row">
+          <article class="stat-card"><span class="stat-icon blue">◷</span><div><p>Students Waiting</p><strong id="waiting-total">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon green">✓</span><div><p>Completed Today</p><strong id="completed-total">0</strong></div></article>
+        </section>
+      </aside>
+    </section>
+
+    <section class="bottom-bar">
+      <div class="announcement"><span class="announcement-icon">i</span><div><strong>PLEASE BE READY</strong><span>Proceed to the registrar counter when your queue number is called.</span></div></div>
+      <div class="update-note" id="updated-time">Waiting for live queue data</div>
+    </section>
+    <div class="connection-error" id="connection-error" hidden></div>
+  </main>
+  <script type="module" src="./display.js"></script>
+</body>
+</html>
