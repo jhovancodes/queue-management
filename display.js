@@ -82,7 +82,6 @@ function render() {
   renderNext(waiting);
 }
 
-
 function spokenNumber(value) {
   const digits = { "0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine" };
   return String(value ?? "").split("").map(character => {
@@ -92,34 +91,40 @@ function spokenNumber(value) {
   }).join(" ").replace(/\s+/g, " ").trim();
 }
 
-function announceTicket(ticket) {
-  if (!voiceEnabled || !ticket || !("speechSynthesis" in window)) return;
+function speak(message) {
+  if (!voiceEnabled || !("speechSynthesis" in window)) return;
 
   window.speechSynthesis.cancel();
-  const number = spokenNumber(ticket.number);
-  const announcement = new SpeechSynthesisUtterance(`Now serving, number ${number}. Please proceed to the registrar counter.`);
-  announcement.lang = "en-PH";
-  announcement.rate = 0.88;
-  announcement.pitch = 1;
-  window.speechSynthesis.speak(announcement);
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.lang = "en-US";
+  utterance.rate = 0.88;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
 }
 
-byId("voice-btn").addEventListener("click", () => {
-  if (!("speechSynthesis" in window)) {
-    byId("connection-error").textContent = "Voice announcements are not supported by this browser. Please use Chrome or Edge.";
+function announceTicket(ticket) {
+  if (!ticket) return;
+  const number = spokenNumber(ticket.number);
+  speak(`Now serving, number ${number}. Please proceed to the registrar counter.`);
+}
+
+function enableVoice() {
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    byId("connection-error").textContent = "Voice announcements are not supported in this browser. Please open this page in Chrome or Safari.";
     byId("connection-error").hidden = false;
     return;
   }
 
   voiceEnabled = true;
-  byId("voice-btn").textContent = "Voice Announcements Enabled";
-  byId("voice-btn").classList.add("enabled");
-  const test = new SpeechSynthesisUtterance("Voice announcements enabled.");
-  test.lang = "en-PH";
-  test.rate = 0.9;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(test);
-});
+  const button = byId("voice-btn");
+  button.textContent = "Voice Announcements Enabled";
+  button.classList.add("enabled");
+  button.setAttribute("aria-pressed", "true");
+  speak("Voice announcements enabled.");
+}
+
+byId("voice-btn").addEventListener("click", enableVoice);
 
 function showConnectionError(message) {
   byId("connection-error").textContent = message;
@@ -163,6 +168,8 @@ onAuthStateChanged(auth, async user => {
         } else if (current && current.id !== lastAnnouncedTicketId) {
           lastAnnouncedTicketId = current.id;
           announceTicket(current);
+        } else if (!current) {
+          lastAnnouncedTicketId = null;
         }
 
         byId("connection-error").hidden = true;
