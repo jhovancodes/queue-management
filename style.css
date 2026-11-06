@@ -535,3 +535,94 @@ td button {
         padding: 12px 14px;
     }
 }
+
+
+#receipt-print {
+    display: none;
+}
+
+@media print {
+    @page {
+        size: 80mm auto;
+        margin: 5mm;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #receipt-print,
+    #receipt-print * {
+        visibility: visible !important;
+    }
+
+    #receipt-print {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 70mm;
+        padding: 0;
+        color: #111;
+        background: #fff;
+        font-family: Arial, sans-serif;
+        font-size: 11px;
+    }
+
+    .receipt-heading {
+        text-align: center;
+        border-bottom: 1px dashed #222;
+        padding-bottom: 10px;
+    }
+
+    .receipt-heading h1 {
+        margin: 0 0 4px;
+        font-size: 16px;
+    }
+
+    .receipt-heading p {
+        margin: 0;
+        font-size: 10px;
+    }
+
+    .receipt-ticket {
+        margin: 14px 0 5px;
+        text-align: center;
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    .receipt-status {
+        text-align: center;
+        font-weight: 700;
+        margin-bottom: 14px;
+    }
+
+    .receipt-details {
+        border-top: 1px dashed #222;
+        border-bottom: 1px dashed #222;
+        padding: 10px 0;
+    }
+
+    .receipt-details div {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 6px 0;
+    }
+
+    .receipt-details span {
+        color: #444;
+    }
+
+    .receipt-details strong {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .receipt-thanks {
+        text-align: center;
+        margin-top: 14px;
+        line-height: 1.5;
+    }
+}

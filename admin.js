@@ -1,4 +1,3 @@
-
 import { auth, db } from "./firebase.js";
 import {
   onAuthStateChanged,
@@ -13,13 +12,15 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
+  getDocs,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 const ticketsRef = collection(db, "tickets");
 let tickets = [];
-let audioContext;
 let unsubscribeTickets = null;
+let timer;
+let actionInProgress = false;
 
 const byId = id => document.getElementById(id);
 
@@ -43,7 +44,7 @@ function formatTime(value) {
 
 function formatDate(value) {
   const date = dateValue(value);
-  return date ? date.toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "—";
+  return date ? date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—";
 }
 
 function formatDuration(milliseconds) {
@@ -94,10 +95,7 @@ async function startNextTicket() {
   if (currentTicket()) return;
 
   const next = waitingTickets()[0];
-  if (!next) {
-    alert("There are no waiting tickets.");
-    return;
-  }
+  if (!next) return;
 
   await changeStatus(next, "serving");
 }
@@ -131,11 +129,15 @@ function showWaitingList(waiting, current, average, now) {
     button.type = "button";
     button.textContent = "Skip";
     button.addEventListener("click", async () => {
+      if (actionInProgress) return;
+      actionInProgress = true;
       try {
         await changeStatus(ticket, "skipped");
       } catch (error) {
         console.error(error);
         alert("Could not skip this ticket. Check Firestore rules.");
+      } finally {
+        actionInProgress = false;
       }
     });
 
@@ -229,10 +231,10 @@ function showData() {
     ? `Estimated wait: about ${current ? average : 0} min`
     : "Estimated wait: —";
 
-  byId("next-btn").disabled = Boolean(current) || waiting.length === 0;
-  byId("call-btn").disabled = !current;
-  byId("done-btn").disabled = !current;
-  byId("skip-btn").disabled = !current;
+  byId("next-btn").disabled = Boolean(current) || waiting.length === 0 || actionInProgress;
+  byId("call-btn").disabled = !current || actionInProgress;
+  byId("done-btn").disabled = !current || actionInProgress;
+  byId("skip-btn").disabled = !current || actionInProgress;
 
   showWaitingList(waiting, current, average, now);
   showHistory();
@@ -244,18 +246,71 @@ function playCallSound() {
   sound.play().catch(error => console.error("Audio failed:", error));
 }
 
+function fillReceipt(ticket, staffEmail) {
+  byId("receipt-number").textContent = ticket.number || "—";
+  byId("receipt-service").textContent = ticket.service || "—";
+  byId("receipt-issued").textContent = formatDate(ticket.createdAt);
+  byId("receipt-called").textContent = formatDate(ticket.calledAt);
+  byId("receipt-finished").textContent = formatDate(ticket.finishedAt);
+  byId("receipt-staff").textContent = staffEmail || "Registrar Staff";
+  byId("receipt-reference").textContent = ticket.id || "—";
+}
+
+async function completeCurrentTicket() {
+  const current = currentTicket();
+  if (!current || actionInProgress) return;
+
+  actionInProgress = true;
+  showData();
+
+  try {
+    await changeStatus(current, "done");
+
+    const completedSnapshot = await getDoc(doc(db, "tickets", current.id));
+    const completedTicket = {
+      id: completedSnapshot.id,
+      ...completedSnapshot.data()
+    };
+
+    fillReceipt(completedTicket, auth.currentUser?.email);
+    window.print();
+
+    const freshTickets = await getDocs(query(ticketsRef, orderBy("createdAt", "asc")));
+    const currentServing = freshTickets.docs.find(item => item.data().status === "serving");
+
+    if (!currentServing) {
+      const next = freshTickets.docs.find(item => item.data().status === "waiting");
+      if (next) {
+        await changeStatus({ id: next.id }, "serving");
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Could not complete the ticket or print its receipt. Check Firestore rules and printer settings.");
+  } finally {
+    actionInProgress = false;
+    showData();
+  }
+}
+
 byId("next-btn").addEventListener("click", async () => {
+  if (actionInProgress) return;
+  actionInProgress = true;
+  showData();
   try {
     await startNextTicket();
   } catch (error) {
     console.error(error);
     alert("Could not call the next ticket. Check Firestore rules.");
+  } finally {
+    actionInProgress = false;
+    showData();
   }
 });
 
 byId("call-btn").addEventListener("click", async () => {
   const current = currentTicket();
-  if (!current) return;
+  if (!current || actionInProgress) return;
 
   try {
     await updateDoc(doc(db, "tickets", current.id), {
@@ -275,34 +330,35 @@ byId("call-btn").addEventListener("click", async () => {
   }
 });
 
-byId("done-btn").addEventListener("click", async () => {
-  const current = currentTicket();
-  if (!current) return;
-
-  try {
-    await changeStatus(current, "done");
-    await startNextTicket();
-  } catch (error) {
-    console.error(error);
-    alert("Could not complete the ticket.");
-  }
-});
+byId("done-btn").addEventListener("click", completeCurrentTicket);
 
 byId("skip-btn").addEventListener("click", async () => {
   const current = currentTicket();
-  if (!current) return;
+  if (!current || actionInProgress) return;
 
+  actionInProgress = true;
+  showData();
   try {
     await changeStatus(current, "skipped");
-    await startNextTicket();
+
+    const freshTickets = await getDocs(query(ticketsRef, orderBy("createdAt", "asc")));
+    const currentServing = freshTickets.docs.find(item => item.data().status === "serving");
+
+    if (!currentServing) {
+      const next = freshTickets.docs.find(item => item.data().status === "waiting");
+      if (next) await changeStatus({ id: next.id }, "serving");
+    }
   } catch (error) {
     console.error(error);
-    alert("Could not skip the ticket.");
+    alert("Could not skip the ticket. Check Firestore rules.");
+  } finally {
+    actionInProgress = false;
+    showData();
   }
 });
 
 byId("clear-btn").addEventListener("click", async () => {
-  if (!confirm("Delete completed and skipped tickets from queue history?")) return;
+  if (!confirm("Delete completed and skipped tickets from queue history? This cannot be undone.")) return;
 
   const history = tickets.filter(ticket => ["done", "skipped"].includes(ticket.status));
 
@@ -337,8 +393,6 @@ document.querySelector(".logout")?.addEventListener("click", async event => {
   await signOut(auth);
   location.href = "login.html";
 });
-
-let timer;
 
 onAuthStateChanged(auth, async user => {
   if (!user || user.isAnonymous) {

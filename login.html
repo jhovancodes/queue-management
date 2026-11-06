@@ -56,26 +56,6 @@
         </section>
     </main>
 
-    <script>
-        const form = document.getElementById("login-form");
-        const message = document.getElementById("login-message");
-        const password = document.getElementById("password");
-        const toggle = document.getElementById("toggle-password");
-
-        toggle.addEventListener("click", () => {
-            const showing = password.type === "text";
-            password.type = showing ? "password" : "text";
-            toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
-            toggle.innerHTML = showing ? '<i class="bx bx-show"></i>' : '<i class="bx bx-hide"></i>';
-        });
-
-        form.addEventListener("submit", event => {
-            event.preventDefault();
-            message.hidden = false;
-            message.className = "login-message info";
-            message.textContent = "Logging in...";
-        });
-    </script>
     <script type="module" src="./login.js"></script>
 </body>
 </html>
