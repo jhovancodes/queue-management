@@ -6,6 +6,9 @@ const byId = id => document.getElementById(id);
 const ticketsRef = collection(db, "tickets");
 let tickets = [];
 let unsubscribeTickets = null;
+let voiceEnabled = false;
+let hasInitialSnapshot = false;
+let lastAnnouncedTicketId = null;
 
 function timestampValue(value) {
   if (!value) return 0;
@@ -79,6 +82,45 @@ function render() {
   renderNext(waiting);
 }
 
+
+function spokenNumber(value) {
+  const digits = { "0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine" };
+  return String(value ?? "").split("").map(character => {
+    if (digits[character]) return digits[character];
+    if (/^[a-z]$/i.test(character)) return character;
+    return " ";
+  }).join(" ").replace(/\s+/g, " ").trim();
+}
+
+function announceTicket(ticket) {
+  if (!voiceEnabled || !ticket || !("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel();
+  const number = spokenNumber(ticket.number);
+  const announcement = new SpeechSynthesisUtterance(`Now serving, number ${number}. Please proceed to the registrar counter.`);
+  announcement.lang = "en-PH";
+  announcement.rate = 0.88;
+  announcement.pitch = 1;
+  window.speechSynthesis.speak(announcement);
+}
+
+byId("voice-btn").addEventListener("click", () => {
+  if (!("speechSynthesis" in window)) {
+    byId("connection-error").textContent = "Voice announcements are not supported by this browser. Please use Chrome or Edge.";
+    byId("connection-error").hidden = false;
+    return;
+  }
+
+  voiceEnabled = true;
+  byId("voice-btn").textContent = "Voice Announcements Enabled";
+  byId("voice-btn").classList.add("enabled");
+  const test = new SpeechSynthesisUtterance("Voice announcements enabled.");
+  test.lang = "en-PH";
+  test.rate = 0.9;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(test);
+});
+
 function showConnectionError(message) {
   byId("connection-error").textContent = message;
   byId("connection-error").hidden = false;
@@ -113,6 +155,16 @@ onAuthStateChanged(auth, async user => {
       query(ticketsRef, orderBy("createdAt", "asc")),
       snapshot => {
         tickets = snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+        const current = tickets.find(ticket => ticket.status === "serving");
+
+        if (!hasInitialSnapshot) {
+          lastAnnouncedTicketId = current?.id || null;
+          hasInitialSnapshot = true;
+        } else if (current && current.id !== lastAnnouncedTicketId) {
+          lastAnnouncedTicketId = current.id;
+          announceTicket(current);
+        }
+
         byId("connection-error").hidden = true;
         byId("connection-status").textContent = "Live";
         render();

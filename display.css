@@ -41,6 +41,8 @@ h1, h2, p { margin-top: 0; }
 .clock-block { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .clock-block strong { color: #f5f8ff; font: 800 clamp(21px, 2.4vw, 34px) Manrope, sans-serif; }
 .clock-block span { color: #91a3bf; font-size: 11px; }
+.voice-button { min-height: 42px; padding: 0 14px; border: 1px solid #39745f; border-radius: 12px; background: #174536; color: #b8f2d6; font: 700 12px 'DM Sans', sans-serif; cursor: pointer; }
+.voice-button.enabled { border-color: #3974a4; background: #1b3b60; color: #c6dcff; }
 #fullscreen-btn { width: 42px; height: 42px; border: 1px solid #334967; border-radius: 12px; background: #172943; color: #dce8fa; font-size: 25px; cursor: pointer; }
 
 .main-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .85fr); gap: clamp(18px, 2.2vw, 32px); flex: 1; }
@@ -96,6 +98,7 @@ h1, h2, p { margin-top: 0; }
   .live-pill { padding: 8px 10px; font-size: 10px; }
   .clock-block strong { font-size: 18px; }
   .clock-block span { font-size: 9px; }
+  .voice-button { min-height: 36px; padding: 0 9px; font-size: 10px; }
   #fullscreen-btn { width: 36px; height: 36px; }
   .side-column { display: flex; }
   .stats-row { grid-template-columns: 1fr 1fr; }
@@ -108,4 +111,205 @@ h1, h2, p { margin-top: 0; }
 @media (min-width: 1200px) and (min-height: 700px) {
   .display-shell { min-height: 100vh; }
   .now-card { min-height: 0; }
+}
+
+
+:root {
+  color: #1c304f;
+  background: #f4f7fb;
+}
+
+body {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(210, 225, 255, .45), transparent 28rem),
+    #f4f7fb;
+}
+
+.display-shell {
+  width: min(1720px, 100%);
+  padding: clamp(22px, 3.4vw, 54px);
+}
+
+.brand-mark {
+  border: 1px solid #dbe6fb;
+  background: #e9f0ff;
+  color: #2459d3;
+}
+
+.eyebrow {
+  color: #3866cb;
+}
+
+.topbar h1 {
+  color: #142746;
+}
+
+.live-pill {
+  border: 1px solid #cdebd8;
+  background: #eaf9f0;
+  color: #18844d;
+}
+
+.live-pill span,
+.pulse-dot {
+  background: #1aa35b;
+  box-shadow: 0 0 0 5px #1aa35b1c;
+}
+
+.clock-block strong {
+  color: #142746;
+}
+
+.clock-block span {
+  color: #73819a;
+}
+
+.voice-button {
+  border: 1px solid #cdebd8;
+  background: #eaf9f0;
+  color: #147c48;
+}
+
+.voice-button:hover {
+  background: #dff5e8;
+}
+
+.voice-button.enabled {
+  border-color: #b8cdfa;
+  background: #eaf0ff;
+  color: #2459d3;
+}
+
+#fullscreen-btn {
+  border: 1px solid #dce5f2;
+  background: white;
+  color: #304768;
+}
+
+#fullscreen-btn:hover {
+  background: #eef4ff;
+  border-color: #b8cdfa;
+}
+
+.now-card,
+.next-card,
+.stat-card {
+  border: 1px solid #e4eaf3;
+  border-radius: 19px;
+  background: white;
+  box-shadow: 0 8px 28px rgba(29, 54, 91, .045);
+}
+
+.now-card {
+  background: linear-gradient(145deg, #f2fcf6, #e5f8ec);
+  border-color: #cdebd8;
+}
+
+.section-label {
+  color: #4b8061;
+}
+
+.label-dot {
+  background: #1aa35b;
+}
+
+.current-number {
+  color: #13804a;
+  text-shadow: none;
+}
+
+.current-service {
+  color: #557c64;
+}
+
+.serving-footer {
+  color: #4b8061;
+}
+
+.section-heading .eyebrow {
+  color: #3866cb;
+}
+
+.section-heading h2 {
+  color: #1c304f;
+}
+
+.queue-count {
+  background: #eef3fc;
+  color: #4c6385;
+}
+
+.next-item {
+  border: 1px solid #edf0f6;
+  background: #fbfcff;
+}
+
+.next-item:first-child {
+  border-color: #cdebd8;
+  background: #f1fbf5;
+}
+
+.next-ticket {
+  color: #233c60;
+}
+
+.next-service {
+  color: #6b7b93;
+}
+
+.empty-state {
+  border-color: #d9e2ef;
+  color: #8290a4;
+}
+
+.stat-icon.blue {
+  background: #edf3ff;
+  color: #2459d3;
+}
+
+.stat-icon.green {
+  background: #eaf9f0;
+  color: #18844d;
+}
+
+.stat-card p {
+  color: #77869b;
+}
+
+.stat-card strong {
+  color: #263d5c;
+}
+
+.bottom-bar {
+  border: 1px solid #e4eaf3;
+  background: white;
+}
+
+.announcement-icon {
+  background: #edf3ff;
+  color: #2459d3;
+}
+
+.announcement strong {
+  color: #354a68;
+}
+
+.announcement div span {
+  color: #6b7b93;
+}
+
+.update-note {
+  color: #8290a4;
+}
+
+.connection-error {
+  border: 1px solid #f2cbd0;
+  background: #fff0f1;
+  color: #a83242;
+}
+
+@media (max-width: 600px) {
+  .display-shell {
+    padding: 18px;
+  }
 }
