@@ -7,6 +7,7 @@ const ticketsRef = collection(db, "tickets");
 let tickets = [];
 let unsubscribeTickets = null;
 let voiceEnabled = false;
+let audioContext = null;
 let hasInitialSnapshot = false;
 let lastAnnouncedTicketId = null;
 let lastAnnouncedCallTime = 0;
@@ -92,46 +93,80 @@ function spokenNumber(value) {
   }).join(" ").replace(/\s+/g, " ").trim();
 }
 
+function playDing() {
+  if (!voiceEnabled || !audioContext) return;
+
+  try {
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, now);
+    oscillator.frequency.exponentialRampToValueAtTime(1175, now + 0.11);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.33);
+  } catch (error) {
+    console.error("Display notification sound failed:", error);
+  }
+}
+
 function speak(message) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
 
-  const utterance = new SpeechSynthesisUtterance(message);
-  utterance.lang = "en-US";
-  utterance.rate = 0.88;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-
   window.speechSynthesis.cancel();
   window.speechSynthesis.resume();
+
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.lang = "en-US";
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
   window.speechSynthesis.speak(utterance);
 }
 
 function announceTicket(ticket) {
   if (!ticket) return;
   const number = spokenNumber(ticket.number);
-  speak(`Now serving, number ${number}. Please proceed to the registrar counter.`);
+  speak(`Calling the attention of number ${number}. Please proceed to window one.`);
 }
 
 function enableVoice() {
-  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
-    byId("connection-error").textContent = "Voice announcements are not supported in this browser. Please open this page in Chrome or Safari.";
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    byId("connection-error").textContent = "Audio announcements are not supported in this browser. Please open this page in Chrome or Safari.";
     byId("connection-error").hidden = false;
     return;
   }
 
-  voiceEnabled = true;
-  const button = byId("voice-btn");
-  button.textContent = "Voice Announcements Enabled";
-  button.classList.add("enabled");
-  button.setAttribute("aria-pressed", "true");
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.resume();
+  try {
+    if (!audioContext) audioContext = new AudioContextClass();
 
-  const testUtterance = new SpeechSynthesisUtterance("Voice announcements enabled. This device is ready.");
-  testUtterance.lang = "en-US";
-  testUtterance.rate = 0.88;
-  testUtterance.volume = 1;
-  window.speechSynthesis.speak(testUtterance);
+    audioContext.resume().then(() => {
+      voiceEnabled = true;
+      const button = byId("voice-btn");
+      button.textContent = "TV Audio Enabled";
+      button.classList.add("enabled");
+      button.setAttribute("aria-pressed", "true");
+      playDing();
+    }).catch(error => {
+      console.error("Could not enable display audio:", error);
+      byId("connection-error").textContent = "Could not enable audio. Please check your device volume and browser permissions.";
+      byId("connection-error").hidden = false;
+    });
+  } catch (error) {
+    console.error("Could not initialize display audio:", error);
+    byId("connection-error").textContent = "Could not initialize audio on this device.";
+    byId("connection-error").hidden = false;
+  }
 }
 
 byId("voice-btn").addEventListener("click", enableVoice);
@@ -179,7 +214,7 @@ onAuthStateChanged(auth, async user => {
         } else if (current && current.id !== lastAnnouncedTicketId) {
           lastAnnouncedTicketId = current.id;
           lastAnnouncedCallTime = timestampValue(current.lastCalledAt);
-          announceTicket(current);
+          playDing();
         } else if (current) {
           const callTime = timestampValue(current.lastCalledAt);
 
