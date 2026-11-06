@@ -13,6 +13,7 @@ import {
   deleteDoc,
   getDoc,
   getDocs,
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
@@ -353,15 +354,31 @@ byId("skip-btn").addEventListener("click", async () => {
 });
 
 byId("clear-btn").addEventListener("click", async () => {
-  if (!confirm("Delete completed and skipped tickets from queue history? This cannot be undone.")) return;
+  if (!confirm("Delete completed and skipped tickets from queue history? If no students are waiting or being served, the queue number will also reset to A001.")) return;
 
   const history = tickets.filter(ticket => ["done", "skipped"].includes(ticket.status));
+  const hasActiveTickets = tickets.some(ticket => ["waiting", "serving"].includes(ticket.status));
 
   try {
     await Promise.all(history.map(ticket => deleteDoc(doc(db, "tickets", ticket.id))));
+
+    if (!hasActiveTickets) {
+      const now = new Date();
+      const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const counterRef = doc(db, "queueCounters", dateKey);
+
+      await setDoc(counterRef, {
+        lastNumber: 0,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    alert(hasActiveTickets
+      ? "History cleared. Active and waiting tickets were kept, so queue numbering was not reset."
+      : "History cleared. The next ticket will start at A001.");
   } catch (error) {
     console.error(error);
-    alert("Could not clear history. Check Firestore rules.");
+    alert("Could not clear history or reset the queue number. Check Firestore rules.");
   }
 });
 
