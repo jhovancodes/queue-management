@@ -9,6 +9,7 @@ let unsubscribeTickets = null;
 let voiceEnabled = false;
 let hasInitialSnapshot = false;
 let lastAnnouncedTicketId = null;
+let lastAnnouncedCallTime = 0;
 
 function timestampValue(value) {
   if (!value) return 0;
@@ -94,12 +95,14 @@ function spokenNumber(value) {
 function speak(message) {
   if (!voiceEnabled || !("speechSynthesis" in window)) return;
 
-  window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(message);
   utterance.lang = "en-US";
   utterance.rate = 0.88;
   utterance.pitch = 1;
   utterance.volume = 1;
+
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.resume();
   window.speechSynthesis.speak(utterance);
 }
 
@@ -121,7 +124,14 @@ function enableVoice() {
   button.textContent = "Voice Announcements Enabled";
   button.classList.add("enabled");
   button.setAttribute("aria-pressed", "true");
-  speak("Voice announcements enabled.");
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.resume();
+
+  const testUtterance = new SpeechSynthesisUtterance("Voice announcements enabled. This device is ready.");
+  testUtterance.lang = "en-US";
+  testUtterance.rate = 0.88;
+  testUtterance.volume = 1;
+  window.speechSynthesis.speak(testUtterance);
 }
 
 byId("voice-btn").addEventListener("click", enableVoice);
@@ -164,12 +174,22 @@ onAuthStateChanged(auth, async user => {
 
         if (!hasInitialSnapshot) {
           lastAnnouncedTicketId = current?.id || null;
+          lastAnnouncedCallTime = timestampValue(current?.lastCalledAt);
           hasInitialSnapshot = true;
         } else if (current && current.id !== lastAnnouncedTicketId) {
           lastAnnouncedTicketId = current.id;
+          lastAnnouncedCallTime = timestampValue(current.lastCalledAt);
           announceTicket(current);
-        } else if (!current) {
+        } else if (current) {
+          const callTime = timestampValue(current.lastCalledAt);
+
+          if (callTime && callTime !== lastAnnouncedCallTime) {
+            lastAnnouncedCallTime = callTime;
+            announceTicket(current);
+          }
+        } else {
           lastAnnouncedTicketId = null;
+          lastAnnouncedCallTime = 0;
         }
 
         byId("connection-error").hidden = true;

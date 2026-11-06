@@ -240,11 +240,7 @@ function showData() {
   showHistory();
 }
 
-function playCallSound() {
-  const sound = new Audio("Rene Baterbonia Mama - Sound Effect.mp3");
-  sound.volume = 1;
-  sound.play().catch(error => console.error("Audio failed:", error));
-}
+
 
 function fillReceipt(ticket, staffEmail) {
   byId("receipt-number").textContent = ticket.number || "—";
@@ -318,7 +314,6 @@ byId("call-btn").addEventListener("click", async () => {
       updatedAt: serverTimestamp()
     });
 
-    playCallSound();
 
     const card = byId("current-number").closest(".stat");
     card.classList.remove("call-flash");
