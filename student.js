@@ -98,7 +98,7 @@ function printTicket(ticket, printWindow = null) {
   const target = printWindow || window.open("", "_blank", "width=420,height=650");
 
   if (!target) {
-    showMessage("Your ticket was created, but the print window was blocked. Allow pop-ups and use the Print Ticket button.", "error");
+    showMessage("Your ticket was created, but the browser blocked the print window. Please allow pop-ups for this site.", "error");
     return false;
   }
 
@@ -163,18 +163,6 @@ function render() {
     status.textContent = myTicket.status.charAt(0).toUpperCase() + myTicket.status.slice(1);
     status.className = `status-pill ${myTicket.status}`;
 
-    let printButton = document.getElementById("print-ticket-btn");
-    if (!printButton) {
-      printButton = document.createElement("button");
-      printButton.id = "print-ticket-btn";
-      printButton.type = "button";
-      printButton.textContent = "Print Ticket";
-      printButton.className = "primary-button";
-      printButton.style.marginTop = "10px";
-      result.appendChild(printButton);
-    }
-
-    printButton.onclick = () => printTicket(myTicket);
   }
 }
 
