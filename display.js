@@ -135,7 +135,7 @@ function speak(message) {
 function announceTicket(ticket) {
   if (!ticket) return;
   const number = spokenNumber(ticket.number);
-  speak(`Calling the attention of number ${number}. Please proceed to window one.`);
+  speak(`Calling number ${number}. Please proceed to the registrar's office.`);
 }
 
 function enableVoice() {

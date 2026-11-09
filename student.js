@@ -105,6 +105,16 @@ function printTicket(ticket, printWindow = null) {
   target.document.open();
   target.document.write(buildTicketMarkup(ticket));
   target.document.close();
+
+  const requestPrint = () => {
+    if (!target.closed) {
+      target.focus();
+      target.print();
+    }
+  };
+
+  target.addEventListener("load", requestPrint, { once: true });
+  target.setTimeout(requestPrint, 700);
   return true;
 }
 
@@ -180,6 +190,12 @@ ticketForm.addEventListener("submit", async event => {
   const button = ticketForm.querySelector('button[type="submit"]');
   button.disabled = true;
   const printWindow = window.open("", "_blank", "width=420,height=650");
+
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write("<!DOCTYPE html><html><head><title>Preparing ticket</title></head><body style='font-family:Arial,sans-serif;text-align:center;padding:40px'>Preparing your ticket for printing...</body></html>");
+    printWindow.document.close();
+  }
 
   try {
     const now = new Date();
